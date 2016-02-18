@@ -97,7 +97,7 @@ PushClient.prototype.request = function (options, url) {
 
   var error = null;
 
-  var jsonString = JSON.stringify(json_request);
+  var jsonString = JSON.stringify(json_request).replace(/[\u0080-\uFFFF]/g, function(m) { return "\\u" + ("0000" + m.charCodeAt(0).toString(16)).slice(-4); });
   var headers = {
     'Content-Type': 'application/json',
     'Content-Length': jsonString.length
@@ -121,8 +121,13 @@ PushClient.prototype.request = function (options, url) {
 
     res.on('end', function() {
    //   console.log(responseString);
-      var resultObject = JSON.parse(responseString);
-        deferred.resolve(resultObject);
+      var resultObject = {}
+      try {
+         resultObject = JSON.parse(responseString);
+      } catch (e) {
+          deferred.reject(e)
+      }
+      deferred.resolve(resultObject);
     });
 
 
